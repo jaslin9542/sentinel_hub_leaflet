@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name = "viewport" content = "width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/cupertino/jquery-ui.css">
+        <title>Sentinel Hub WMS services with Leaflet</title>
+    
+        <style>
+
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                width: 100%;
+                 }
+            
+
+            #devTestingDemo {
+                height: 100%;
+                width: 100%;
+                z-index: -1;
+                }
+
+            
+            .open-button {
+                background-color: rgb(9, 136, 186);
+                color: white;
+                padding: 15px 20px;
+                border: none;
+                cursor: pointer;
+                opacity: 1;
+                position: fixed;
+                top: 60px;
+                right: 10px;
+                width: 180px;
+                }
+
+            .reload-page {
+                background-color: rgb(9, 136, 186);
+                color: white;
+                padding: 15px 20px;
+                border: none;
+                cursor: pointer;
+                opacity: 1;
+                position: fixed;
+                bottom: 60px;
+                right: 10px;
+                width: 180px;
+                }
+
+            .fetch-button {
+                background-color: rgb(9, 136, 186);
+                color: white;
+                padding: 15px 20px;
+                border: none;
+                cursor: pointer;
+                opacity: 1;
+                position: fixed;
+                bottom: 120px;
+                right: 10px;
+                width: 180px;
+                }
+
+            .form-group {
+                display: none;
+                position: fixed;
+                top: 60px;
+                right: 20px;
+                border: 5px solid #f1f1f1;
+                background-color: white
+                }
+
+            .filter-ui {
+                    position: absolute;
+                    left: 10px;
+                    bottom: 25px;
+                    z-index: 650;
+                    padding: 8px;
+                    background: #fff;
+                    border: 1px solid #000;
+                    font-size: 1.05em;
+                }
+
+            /* .btn-secondary{
+                background-color: rgb(109, 175, 237);
+                color: white;
+                cursor: pointer;
+                width: 100px;
+            } */
+        </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.2.0/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.2.0/leaflet.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    </head>
+    
+
+<body>
+<!-- leaflet map goes in here -->
+<div id="devTestingDemo"></div>
+<button class = "fetch-button" onclick="fetchURL()">Fetch URL</button>
+<button class = "reload-page" onclick = "location.reload()">Reload Page</button>
+    <header>
+        
+        <button class = "open-button" onclick="openButton()">Set Date</button>
+        
+            
+			<div class="form-group" id="dateForm">
+                <!-- <div class = "form-element" id = "dateElement"> -->
+				    <label for="fromDate">Start Date:</label>
+				    <input class = "dateSet" type="text" maxDate = "" id="fromDate" name="from" value = "">
+                    <br><br>
+				    <label for="toDate">End Date:</label>
+				    <input class = "dateSet" type="text" minDate = "" id="toDate" name="to" value = "">
+                    <br><br>
+                
+            
+				    <button type="button" id="setFilter" class="btn btn-secondary" onclick = "applyFilter()">Apply Filter</button>
+                    <br><br>
+				   
+                    <button onclick="document.getElementById('fromDate').value = 
+                                    document.getElementById('toDate').value = 
+                                    document.getElementById('newFromDate').innerHTML = 
+                                    document.getElementById('newToDate').innerHTML =  ''">Clear Filter</button>
+                    <br><br>
+                    <button type="button" class="btn btn-secondary" onclick="closeButton()" data-dismiss="modal">Close</button>
+            </div>
+		
+    </header>
+
+<!-- displays date filter applied to data-->
+<div class="filter-ui">
+    <b>Date Filter</b>
+    <br>
+    From:<p id = "newFromDate"></p>
+    To:<p id = "newToDate"></p>
+</div>
+
+
+<script>
+
+function openButton() {
+    document.getElementById("dateForm").style.display = "block";
+}
+    
+function closeButton() {
+    document.getElementById("dateForm").style.display = "none";
+}
+
+
+function applyFilter() {
+    var start = document.getElementById('fromDate').value;
+    document.getElementById('newFromDate').innerHTML = start;
+    var end = document.getElementById('toDate').value;
+    document.getElementById('newToDate').innerHTML = end;
+    console.log(start)
+    console.log(end)
+
+}
+    
+
+
+
+// OpenStreetMap
+let osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+});
+
+
+// Sentinel Hub WMS service
+// tiles generated using EPSG:3857 projection - Leaflet takes care of that
+
+function fetchURL() {
+    dateUI = document.getElementById('fromDate').value + "/" + document.getElementById('toDate').value;
+    console.log(dateUI)
+
+    
+let baseUrl = "https://services.sentinel-hub.com/ogc/wms/bac3a0ff-2f8b-4141-81f6-d3253cbfd8bd";
+let sentinelHub = L.tileLayer.wms(baseUrl, {
+    tileSize: 512,
+    attribution: '&copy; <a href="http://www.sentinel-hub.com/" target="_blank">Sentinel Hub</a>',
+    	 	 	 	urlProcessingApi:"https://services.sentinel-hub.com/ogc/wms/1d4de4a3-2f50-493c-abd8-861dec3ae6b2", 
+ 	 	 	 	maxcc:20, 
+ 	 	 	 	minZoom:6, 
+ 	 	 	 	maxZoom:16, 
+ 	 	 	 	preset:"TRUE-COLOR-S2L2A", 
+ 	 	 	 	layers:"TRUE-COLOR-S2L2A",  
+ 	 	 	 	time:`${dateUI}`, 
+
+});
+
+
+
+let baseMaps = {
+    'OpenStreetMap': osm
+};
+
+let overlayMaps = {
+    'Sentinel Hub WMS': sentinelHub
+}
+
+let map = L.map('devTestingDemo', {
+    center: [10.022948394510154, 5.5810546875], // lat/lng in EPSG:4326
+    zoom: 8,
+    layers: [osm, sentinelHub]
+});
+
+L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+}
+
+$(document).ready(function() {
+var fromDate;
+var toDate;
+
+
+
+$('#fromDate').datepicker({
+    dateFormat: 'yy-mm-dd'
+});
+
+$('#toDate').datepicker({
+    dateFormat: 'yy-mm-dd'
+});
+
+$('#fromDate').change(function(){
+    fromDate = $(this).datepicker('getDate');
+    $('#toDate').datepicker('option', 'minDate', fromDate);
+});
+
+$('#toDate').change(function(){
+    toDate = $(this).datepicker('getDate');
+    $('#fromDate').datepicker('option', 'maxDate', toDate);
+});
+
+
+});
+</script>
+</body>
+</html>
